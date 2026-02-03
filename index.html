@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tripio.net - Planificador Inteligente de Viajes</title>
+<title>Tripio - Planificador Inteligente de Viajes</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Lato&display=swap" rel="stylesheet">
 
 <style>
@@ -63,11 +63,12 @@ box-shadow:0 3px 10px rgba(0,0,0,0.1)
 
 footer{background:var(--azul);color:white;text-align:center;padding:20px}
 </style>
-</head>
+</head><link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <body>
 
 <header>
-<img src="logo.png" alt="Tripio Logo">
+<img src="https://github.com/Antonioo41/tripio-assets/blob/main/watermarked-c3c7e147-7fc6-416a-a22d-c425f1549170.jpg?raw=true" alt="Tripio Logo">
 <h1>Tu viaje perfecto, diseñado por IA</h1>
 <p>Planifica todo en un solo lugar, sin saltar entre mil webs</p>
 
@@ -102,7 +103,7 @@ footer{background:var(--azul);color:white;text-align:center;padding:20px}
 <div id="mapa"></div>
 </section>
 
-<footer>© 2026 Tripio.net</footer>
+<footer>© 2026 Tripio</footer>
 
 <script>
 function buscarVuelos(){
@@ -157,3 +158,4 @@ src="https://www.google.com/maps?q=${ciudad}&output=embed" allowfullscreen>
 
 </body>
 </html>
+
