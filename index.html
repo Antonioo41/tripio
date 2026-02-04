@@ -331,7 +331,10 @@ ${respuesta.replace(/\n/g,"<br>")}
 </div>
 
 <div class="acciones-viaje" style="margin-top:20px">
-  <button class="boton" disabled>💾 Guarda tu itinerario o desbloquea más ajustes (próximamente)</button>
+  <button class="boton" onclick="abrirGuardar()">
+  💾 Guarda tu itinerario o desbloquea más ajustes
+</button>
+
 </div>
 
 </div>
@@ -419,8 +422,80 @@ async function ajustarItinerario(tipo) {
     document.getElementById("limiteAjustes").style.display = "block";
   }
 }
+function abrirGuardar(){
+  document.getElementById("modalGuardar").style.display="flex";
+}
+
+function cerrarGuardar(){
+  document.getElementById("modalGuardar").style.display="none";
+}
+
+async function guardarEmail(){
+  let email=document.getElementById("emailUsuario").value;
+
+  if(!email || !email.includes("@")){
+    alert("Introduce un email válido");
+    return;
+  }
+
+  await fetch("https://formsubmit.co/ajax/tripio.contacto@gmail.com", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: email,
+      origen: origen.value,
+      destino: destino.value,
+      fechas: ida.value + " - " + vuelta.value
+    })
+  });
+
+  alert("¡Gracias! Te avisaremos pronto 🙂");
+  cerrarGuardar();
+}
 
 </script>
+<div id="modalGuardar" style="
+display:none;
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:rgba(0,0,0,0.6);
+z-index:9999;
+align-items:center;
+justify-content:center;
+">
+
+  <div style="
+  background:white;
+  padding:25px;
+  border-radius:10px;
+  max-width:400px;
+  width:90%;
+  text-align:center;
+  ">
+
+    <h3 style="margin-bottom:10px">Guarda tu itinerario</h3>
+    <p style="margin-bottom:15px">
+      Te enviaremos el itinerario por email cuando esté disponible.
+    </p>
+
+    <input
+      id="emailUsuario"
+      type="email"
+      placeholder="Tu email"
+      style="width:100%;padding:10px;margin-bottom:15px;border-radius:6px;border:1px solid #ccc;"
+    >
+
+    <button class="boton" onclick="guardarEmail()">Guardar</button>
+    <br><br>
+    <button onclick="cerrarGuardar()" style="background:none;border:none;color:#888;cursor:pointer">
+      Cerrar
+    </button>
+
+  </div>
+</div>
 
 </body>
 </html>
