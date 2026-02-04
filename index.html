@@ -14,7 +14,6 @@ body{background:#f9f9f9;color:#333}
 
 :root{
 --azul:#00B2A9;
---naranja:#FFA56B;
 --gris:#f2f2f2;
 }
 
@@ -29,30 +28,57 @@ header img{width:180px;margin-bottom:20px}
 
 .buscador{
 background:white;padding:40px;border-radius:12px;margin-top:20px;
-display:flex;flex-wrap:wrap;gap:15px;justify-content:center
+display:flex;flex-wrap:wrap;gap:15px;justify-content:center;
+position:relative;z-index:5;
 }
-.buscador input, .buscador button{
-padding:12px;border-radius:6px;border:1px solid #ccc;font-size:1rem
+
+.buscador input{
+padding:12px;border-radius:6px;border:1px solid #ccc;font-size:1rem;
+color:#000;background:white;
 }
-.buscador button{background:var(--naranja);color:white;border:none;font-weight:bold;cursor:pointer}
+
+.boton{
+background:white;
+color:var(--azul);
+border:2px solid var(--azul);
+font-weight:bold;
+cursor:pointer;
+padding:12px 20px;
+border-radius:6px;
+text-decoration:none;
+display:inline-block;
+font-size:1rem;
+}
+.boton:hover{
+background:var(--azul);
+color:white;
+}
+
+.sugerencias{
+position:absolute;background:white;border:1px solid #ccc;
+width:220px;max-height:150px;overflow:auto;
+z-index:9999;border-radius:6px;display:none;
+}
+.sugerencias div{padding:8px;cursor:pointer;color:black;}
+.sugerencias div:hover{background:var(--gris);}
 
 section{padding:60px 20px}
 h2{color:var(--azul);text-align:center;margin-bottom:30px}
 
-.vuelos-grid{display:grid;gap:15px;max-width:900px;margin:auto}
-.vuelo{
-background:white;padding:15px;border-radius:10px;
-display:flex;justify-content:space-between;align-items:center;
-box-shadow:0 3px 8px rgba(0,0,0,0.1)
-}
-.vuelo button{background:var(--azul);color:white;border:none;padding:8px 15px;border-radius:6px}
-
-.chat{
+.vuelos, .chat{
 max-width:800px;margin:auto;background:white;padding:20px;border-radius:10px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1)
+box-shadow:0 3px 10px rgba(0,0,0,0.1);text-align:center
 }
+
 .mensaje-ia{background:var(--gris);padding:12px;border-radius:8px;margin-bottom:10px}
-.hotel-link{display:block;margin-top:5px;color:var(--azul);font-weight:bold}
+
+.acciones-viaje{
+margin-top:15px;
+display:flex;
+gap:15px;
+justify-content:center;
+flex-wrap:wrap;
+}
 
 #mapa{height:400px;margin-top:40px;border-radius:10px}
 
@@ -68,18 +94,28 @@ footer{background:var(--azul);color:white;text-align:center;padding:20px}
 <p>Planifica todo en un solo lugar</p>
 
 <div class="buscador">
-<input type="text" id="origen" placeholder="Desde">
-<input type="text" id="destino" placeholder="Destino">
+
+<div style="position:relative">
+<input id="origen" placeholder="Desde aeropuerto">
+<div class="sugerencias" id="sugOrigen"></div>
+</div>
+
+<div style="position:relative">
+<input id="destino" placeholder="Destino aeropuerto">
+<div class="sugerencias" id="sugDestino"></div>
+</div>
+
 <input type="date" id="ida">
 <input type="date" id="vuelta">
 <input type="number" id="personas" placeholder="Personas" min="1">
-<button onclick="buscarVuelos()">Buscar vuelos</button>
+
+<button class="boton" onclick="buscarVuelos()">Buscar vuelos</button>
 </div>
 </header>
 
 <section id="seccionVuelos" style="display:none">
-<h2>Elige tus vuelos</h2>
-<div class="vuelos-grid" id="listaVuelos"></div>
+<h2>Vuelos recomendados</h2>
+<div class="vuelos" id="contenedorVuelos"></div>
 </section>
 
 <section id="seccionItinerario" style="display:none">
@@ -92,22 +128,76 @@ footer{background:var(--azul);color:white;text-align:center;padding:20px}
 
 <script>
 
+const AIRPORTS=[
+["Madrid Barajas","MAD"],
+["Barcelona El Prat","BCN"],
+["Roma Fiumicino","FCO"],
+["Londres Heathrow","LHR"],
+["París CDG","CDG"],
+["Nueva York JFK","JFK"],
+["Tokio Narita","NRT"],
+["Dubái DXB","DXB"]
+];
+
+/* AUTOCOMPLETE */
+
+function setupAuto(inputId, sugId){
+let input=document.getElementById(inputId);
+let box=document.getElementById(sugId);
+
+input.addEventListener("input",()=>{
+let val=input.value.toLowerCase();
+box.innerHTML="";
+if(val.length<1){box.style.display="none";return;}
+
+AIRPORTS.forEach(a=>{
+if(a[0].toLowerCase().includes(val)){
+let div=document.createElement("div");
+div.innerText=a[0]+" ("+a[1]+")";
+div.onclick=()=>{
+input.value=div.innerText;
+box.style.display="none";
+};
+box.appendChild(div);
+}
+});
+box.style.display="block";
+});
+}
+
+setupAuto("origen","sugOrigen");
+setupAuto("destino","sugDestino");
+
+function obtenerIATA(t){
+let m=t.match(/\((.*?)\)/);
+return m?m[1]:"";
+}
+
+/* BUSCAR VUELOS */
+
 function buscarVuelos(){
 document.getElementById("seccionVuelos").style.display="block";
 
-let vuelosHTML="";
-for(let i=1;i<=3;i++){
-vuelosHTML+=`
-<div class="vuelo">
-<div>
-<strong>Vuelo recomendado ${i}</strong><br>
-Ejemplo · 2h 30m
-</div>
-<button onclick="generarItinerario()">Seleccionar</button>
-</div>`;
+let o=obtenerIATA(origen.value);
+let d=obtenerIATA(destino.value);
+let ida=document.getElementById("ida").value;
+let vuelta=document.getElementById("vuelta").value;
+
+if(!o || !d || !ida){
+alert("Completa origen, destino y fecha");
+return;
 }
-document.getElementById("listaVuelos").innerHTML=vuelosHTML;
+
+let link=`https://aviasales.tpx.lu/D6AvybS6?origin_iata=${o}&destination_iata=${d}&depart_date=${ida}&return_date=${vuelta}`;
+
+contenedorVuelos.innerHTML=`
+<a class="boton" href="${link}" target="_blank">✈️ Ver vuelos recomendados</a>
+<br><br>
+<button class="boton" onclick="generarItinerario()">Seguir con IA</button>
+`;
 }
+
+/* IA */
 
 async function generarItinerario(){
 document.getElementById("seccionItinerario").style.display="block";
@@ -119,61 +209,53 @@ let personas=document.getElementById("personas").value;
 
 document.getElementById("chatItinerario").innerHTML="Pensando viaje...";
 
-let respuestaIA = await pedirItinerario(destino, ida, vuelta, personas);
-
-let bookingLink=`https://www.booking.com/searchresults.html?ss=${destino}&checkin=${ida}&checkout=${vuelta}&group_adults=${personas}`;
+let respuesta=await pedirItinerario(destino,ida,vuelta,personas);
 
 document.getElementById("chatItinerario").innerHTML=`
 <div class="mensaje-ia">
-${respuestaIA.replace(/\n/g,"<br>")}<br><br>
-🏨 <a class="hotel-link" href="${bookingLink}" target="_blank">Ver hoteles</a>
+${respuesta.replace(/\n/g,"<br>")}
+
+<div class="acciones-viaje">
+<a class="boton" href="https://ektatraveling.tpx.lu/OWr2j3Hi" target="_blank">🚗 Alquilar coche</a>
+</div>
+
 </div>
 `;
 
 cargarMapa(destino);
 }
 
-async function cargarMapa(ciudad){
+/* SUPABASE */
 
-setTimeout(async () => {
-
-document.getElementById("mapa").innerHTML="";
-
-const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${ciudad}`);
-const data = await response.json();
-
-if(!data.length){ return; }
-
-const lat = data[0].lat;
-const lon = data[0].lon;
-
-var map = L.map('mapa').setView([lat, lon], 13);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19
-}).addTo(map);
-
-L.marker([lat, lon]).addTo(map)
-.bindPopup(ciudad)
-.openPopup();
-
-}, 300);
-}
-
-async function pedirItinerario(destino, ida, vuelta, personas) {
+async function pedirItinerario(destino,ida,vuelta,personas){
 try{
-const response = await fetch("https://pyvbiouteylvmhxkwnri.supabase.co/functions/v1/mistral", {
-method: "POST",
-headers: {"Content-Type": "application/json"},
-body: JSON.stringify({destino, ida, vuelta, personas})
+const r=await fetch("https://pyvbiouteylvmhxkwnri.supabase.co/functions/v1/mistral",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer sb_publishable_bV8dOCIi5X4uVEUGzCXb9Q_LA3HjZr5"
+},
+body:JSON.stringify({destino,ida,vuelta,personas})
 });
-
-const data = await response.json();
-return data.respuesta || "Itinerario listo.";
-
-}catch(e){
+const d=await r.json();
+return d.respuesta || "Itinerario listo.";
+}catch{
 return "Error conectando IA";
 }
+}
+
+/* MAPA */
+
+async function cargarMapa(ciudad){
+setTimeout(async()=>{
+document.getElementById("mapa").innerHTML="";
+const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${ciudad}`);
+const d=await r.json();
+if(!d.length) return;
+var map=L.map('mapa').setView([d[0].lat,d[0].lon],13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+L.marker([d[0].lat,d[0].lon]).addTo(map);
+},300);
 }
 
 </script>
