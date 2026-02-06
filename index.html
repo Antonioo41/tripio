@@ -142,6 +142,10 @@ header{
     width: 100%;
     margin-bottom: 15px; /* separa bien los inputs para que la lista no se superponga */
 }
+.buscador > div {
+    display: flex;
+    flex-direction: column;
+}
 
 /* Inputs y botones ocupan todo el ancho */
 .buscador input,
@@ -151,14 +155,12 @@ header{
 
 /* Sugerencias sobre los demás elementos */
 .sugerencias{
-    position: absolute;
-    top: 100%; /* justo debajo del input correspondiente */
-    left: 0;
+    position: static;        /* clave */
     width: 100%;
-    max-height: 200px;
+    max-height: 180px;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
-    z-index: 99999; /* encima de todo */
+    margin-top: 5px;
+    z-index: 10;
 }
 
 .vuelos, .chat{
@@ -510,6 +512,7 @@ justify-content:center;
 
 </body>
 </html>
+
 
 
 
